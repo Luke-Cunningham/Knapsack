@@ -11,6 +11,17 @@ def read_file(file_path):
     return file_data
 
 
+def generate_inputs():
+    data = []
+    weight_capacity = 5000
+    unique_count = 20
+    for x in range(UNIQUE_COUNT):
+        w = random.randint(1, 20)
+        v = random.randint(1, 30)
+        data.append((w, v))
+    return weight_capacity, unique_count, data
+
+
 def exhaustive_approach(weight_limit, item_count, items):
     power_set, power_set_values, power_set_indexes, knapsack_indexes = [], [], [], []
     highest_value = 0
@@ -95,19 +106,11 @@ def dynamic_programming(weight_limit, item_count, items):
 
 
 if __name__ == '__main__':
-    data = read_file("venv/Resources/Exhaustive_Verification")
-    WEIGHT_CAPACITY = data.pop([0][0])[0]
-    UNIQUE_COUNT = data.pop([0][0])[0]
     RUN_COUNT = 3
+    data = read_file("venv/Resources/Exhaustive_Verification")
+    WEIGHT_CAPACITY, UNIQUE_COUNT = data.pop([0][0])[0], data.pop([0][0])[0]
     run_time, exhaustive_result, heuristic_result, naive_result, dynamic_result = 0, 0, 0, 0, 0
 
-    # data = []
-    # WEIGHT_CAPACITY = 5000
-    # UNIQUE_COUNT = 20
-    # for x in range(UNIQUE_COUNT):
-    #     w = random.randint(1, 20)
-    #     v = random.randint(1, 30)
-    #     data.append((w, v))
 
     dict_list = []
     for d in range(UNIQUE_COUNT):
@@ -123,21 +126,20 @@ if __name__ == '__main__':
 
     for approach in approach_map:
         run_time = 0
-        approach_result = 0
         for run in range(RUN_COUNT):
             start = time.perf_counter()
-            approach_result = approach_map.get(approach)
+            approach_result = approach_map[approach]
             end = time.perf_counter()
             run_time += ((end - start) / RUN_COUNT)
         print(f"The {approach} result is {approach_result} with a runtime of {run_time:.9f} seconds")
 
-    if UNIQUE_COUNT <= 22:
-        for run in range(RUN_COUNT):
-            start = time.perf_counter()
-            exhaustive_result = exhaustive_approach(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
-            end = time.perf_counter()
-            run_time += ((end - start) / RUN_COUNT)
-        print(f"The exhaustive result is {exhaustive_result} with a runtime of {run_time:.9f} seconds")
+    # if UNIQUE_COUNT <= 22:
+    #     for run in range(RUN_COUNT):
+    #         start = time.perf_counter()
+    #         exhaustive_result = approach_map.get('exhaustive')
+    #         end = time.perf_counter()
+    #         run_time += ((end - start) / RUN_COUNT)
+    #     print(f"The exhaustive result is {exhaustive_result} with a runtime of {run_time:.9f} seconds")
 
     # run_time = 0
     # for run in range(RUN_COUNT):
