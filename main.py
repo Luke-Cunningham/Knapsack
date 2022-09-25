@@ -114,34 +114,51 @@ if __name__ == '__main__':
         current_dict = {'Weight': data[d][0], 'Value': data[d][1], 'Index': d + 1, 'Ratio': data[d][1] / data[d][0]}
         dict_list.append(current_dict)
 
+    approach_map = {
+        'exhaustive': exhaustive_approach(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list),
+        'heuristic': heuristic_approach(WEIGHT_CAPACITY, dict_list),
+        'naive': naive_recursion(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list),
+        'dynamic': dynamic_programming(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
+    }
+
+    for approach in approach_map:
+        run_time = 0
+        approach_result = 0
+        for run in range(RUN_COUNT):
+            start = time.perf_counter()
+            approach_result = approach_map.get(approach)
+            end = time.perf_counter()
+            run_time += ((end - start) / RUN_COUNT)
+        print(f"The {approach} result is {approach_result} with a runtime of {run_time:.9f} seconds")
+
     if UNIQUE_COUNT <= 22:
         for run in range(RUN_COUNT):
             start = time.perf_counter()
             exhaustive_result = exhaustive_approach(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
             end = time.perf_counter()
-            run_time += (end - start)
-        print(f"The exhaustive result is {exhaustive_result} with a runtime of {run_time / RUN_COUNT:.9f} seconds")
+            run_time += ((end - start) / RUN_COUNT)
+        print(f"The exhaustive result is {exhaustive_result} with a runtime of {run_time:.9f} seconds")
 
-    run_time = 0
-    for run in range(RUN_COUNT):
-        start = time.perf_counter()
-        heuristic_result = heuristic_approach(WEIGHT_CAPACITY, dict_list)
-        end = time.perf_counter()
-        run_time += (end - start)
-    print(f"The heuristic result is {heuristic_result} with a runtime of {run_time / RUN_COUNT:.9f} seconds")
-
-    run_time = 0
-    for run in range(RUN_COUNT):
-        start = time.perf_counter()
-        naive_result = naive_recursion(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
-        end = time.perf_counter()
-        run_time += (end - start)
-    print(f"The naive recursive result is {naive_result} with a runtime of {run_time / RUN_COUNT:.9f} seconds")
-
-    run_time = 0
-    for run in range(RUN_COUNT):
-        start = time.perf_counter()
-        dynamic_result = exhaustive_approach(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
-        end = time.perf_counter()
-        run_time += (end - start)
-    print(f"The dynamic result is {dynamic_result} with a runtime of {run_time / RUN_COUNT:.9f} seconds")
+    # run_time = 0
+    # for run in range(RUN_COUNT):
+    #     start = time.perf_counter()
+    #     heuristic_result = heuristic_approach(WEIGHT_CAPACITY, dict_list)
+    #     end = time.perf_counter()
+    #     run_time += ((end - start) / RUN_COUNT)
+    # print(f"The heuristic result is {heuristic_result} with a runtime of {run_time:.9f} seconds")
+    #
+    # run_time = 0
+    # for run in range(RUN_COUNT):
+    #     start = time.perf_counter()
+    #     naive_result = naive_recursion(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
+    #     end = time.perf_counter()
+    #     run_time += ((end - start) / RUN_COUNT)
+    # print(f"The naive recursive result is {naive_result} with a runtime of {run_time:.9f} seconds")
+    #
+    # run_time = 0
+    # for run in range(RUN_COUNT):
+    #     start = time.perf_counter()
+    #     dynamic_result = dynamic_programming(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
+    #     end = time.perf_counter()
+    #     run_time += ((end - start) / RUN_COUNT)
+    # print(f"The dynamic result is {dynamic_result} with a runtime of {run_time:.9f} seconds")
