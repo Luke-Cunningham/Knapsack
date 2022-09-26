@@ -14,30 +14,28 @@ def read_file(file_path):
 
 
 def generate_inputs():
-    data = []
+    items = []
     weight_capacity = 5000
     unique_count = 20
     for x in range(UNIQUE_COUNT):
         w = random.randint(1, 20)
         v = random.randint(1, 30)
         data.append((w, v))
-    return weight_capacity, unique_count, data
+    return weight_capacity, unique_count, items
 
 
 def timer_func(func):
-    top = True
-
     def wrap_func(*args, **kwargs):
-        nonlocal top
-        if top:
-            top = False
+        runs = 3
+        for run in range(runs):
             start = time.perf_counter()
             result = func(*args, **kwargs)
-            end = time.perf_counter()
-            print(f'Function {func.__name__!r} executed in {(end - start):.9f}s')
-        else:
-            result = func(*args)
-            top = True
+            elapsed = time.perf_counter() - start
+            if elapsed < 10:
+                elapsed += elapsed / runs
+            else:
+                break
+        print(f'Function {func.__name__!r} executed in {elapsed:.9f}s with result {result}')
         return result
     return wrap_func
 
@@ -89,7 +87,6 @@ def heuristic_approach(weight_limit, items):
     return knapsack_value
 
 
-@timer_func
 def naive_recursion(weight_limit, item_count, items):
     # Base Case
     if weight_limit == 0 or item_count == 0:
@@ -104,6 +101,11 @@ def naive_recursion(weight_limit, item_count, items):
             items[item_count - 1].get('Value') + naive_recursion(weight_limit - items[item_count - 1].get('Weight'),
                                                                  item_count - 1, items),
             naive_recursion(weight_limit, item_count - 1, items))
+
+
+@timer_func
+def naive_recursion_timed(weight_limit, item_count, items):
+    return naive_recursion(weight_limit, item_count, items)
 
 
 @timer_func
@@ -123,19 +125,19 @@ def dynamic_programming(weight_limit, item_count, items):
     return knapsack[item_count][weight_limit]
 
 
-# Item = st.dictionaries({'Weight': st.integers(min_value=1), 'Value': st.integers(min_value=1)})
-# ItemList = st.lists(Item)
-# Capacity = st.integers(min_value=1)
+Item = st.dictionaries({'Weight': st.integers(min_value=1), 'Value': st.integers(min_value=1)})
+ItemList = st.lists(Item)
+Capacity = st.integers(min_value=1)
 
 
-# class TestSolution(unittest.TestCase):
-#     @given(Item, Capacity)
-#     def test_returns_a_fitting_result(self, weight_limit, item_count, items):
-#         result = dynamic_programming(weight_limit, item_count, items)
-#         self.assertLessEqual(
-#             sum(size for value, size in result),
-#             weight_limit
-#         )
+class TestSolution(unittest.TestCase):
+    @given(Item, Capacity)
+    def test_returns_a_fitting_result(self, weight_limit, item_count, items):
+        result = dynamic_programming(weight_limit, item_count, items)
+        self.assertLessEqual(
+            sum(size for value, size in result),
+            weight_limit
+        )
 
 # @given(ItemSet, Capacity)
 # def test_returns_a_non_empty_result_if_any_fit(self, items, capacity):
@@ -196,49 +198,15 @@ def dynamic_programming(weight_limit, item_count, items):
 
 
 if __name__ == '__main__':
-    RUN_COUNT = 3
     data = read_file("venv/Resources/Exhaustive_Verification")
     WEIGHT_CAPACITY, UNIQUE_COUNT = data.pop([0][0])[0], data.pop([0][0])[0]
-    run_time, exhaustive_result, heuristic_result, naive_result, dynamic_result = 0, 0, 0, 0, 0
-
     dict_list = []
     for d in range(UNIQUE_COUNT):
         current_dict = {'Weight': data[d][0], 'Value': data[d][1], 'Index': d + 1, 'Ratio': data[d][1] / data[d][0]}
         dict_list.append(current_dict)
 
-    exhaustive_approach(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
+    if UNIQUE_COUNT <= 22:
+        exhaustive_approach(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
     heuristic_approach(WEIGHT_CAPACITY, dict_list)
-    naive_recursion(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
+    naive_recursion_timed(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
     dynamic_programming(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
-
-    # if UNIQUE_COUNT <= 22:
-    #     for run in range(RUN_COUNT):
-    #         start = time.perf_counter()
-    #         exhaustive_result = approach_map.get('exhaustive')
-    #         end = time.perf_counter()
-    #         run_time += ((end - start) / RUN_COUNT)
-    #     print(f"The exhaustive result is {exhaustive_result} with a runtime of {run_time:.9f} seconds")
-
-    # run_time = 0
-    # for run in range(RUN_COUNT):
-    #     start = time.perf_counter()
-    #     heuristic_result = heuristic_approach(WEIGHT_CAPACITY, dict_list)
-    #     end = time.perf_counter()
-    #     run_time += ((end - start) / RUN_COUNT)
-    # print(f"The heuristic result is {heuristic_result} with a runtime of {run_time:.9f} seconds")
-    #
-    # run_time = 0
-    # for run in range(RUN_COUNT):
-    #     start = time.perf_counter()
-    #     naive_result = naive_recursion(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
-    #     end = time.perf_counter()
-    #     run_time += ((end - start) / RUN_COUNT)
-    # print(f"The naive recursive result is {naive_result} with a runtime of {run_time:.9f} seconds")
-    #
-    # run_time = 0
-    # for run in range(RUN_COUNT):
-    #     start = time.perf_counter()
-    #     dynamic_result = dynamic_programming(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
-    #     end = time.perf_counter()
-    #     run_time += ((end - start) / RUN_COUNT)
-    # print(f"The dynamic result is {dynamic_result} with a runtime of {run_time:.9f} seconds")
