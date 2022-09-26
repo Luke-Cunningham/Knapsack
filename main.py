@@ -3,6 +3,8 @@
 import random
 import time
 import unittest
+from hypothesis import given, assume
+import hypothesis.strategies as st
 
 
 def read_file(file_path):
@@ -22,6 +24,25 @@ def generate_inputs():
     return weight_capacity, unique_count, data
 
 
+def timer_func(func):
+    top = True
+
+    def wrap_func(*args, **kwargs):
+        nonlocal top
+        if top:
+            top = False
+            start = time.perf_counter()
+            result = func(*args, **kwargs)
+            end = time.perf_counter()
+            print(f'Function {func.__name__!r} executed in {(end - start):.9f}s')
+        else:
+            result = func(*args)
+            top = True
+        return result
+    return wrap_func
+
+
+@timer_func
 def exhaustive_approach(weight_limit, item_count, items):
     power_set, power_set_values, power_set_indexes, knapsack_indexes = [], [], [], []
     highest_value = 0
@@ -50,6 +71,7 @@ def exhaustive_approach(weight_limit, item_count, items):
     return highest_value
 
 
+@timer_func
 def heuristic_approach(weight_limit, items):
     knapsack_indexes = []
     knapsack_value = 0
@@ -67,6 +89,7 @@ def heuristic_approach(weight_limit, items):
     return knapsack_value
 
 
+@timer_func
 def naive_recursion(weight_limit, item_count, items):
     # Base Case
     if weight_limit == 0 or item_count == 0:
@@ -83,6 +106,7 @@ def naive_recursion(weight_limit, item_count, items):
             naive_recursion(weight_limit, item_count - 1, items))
 
 
+@timer_func
 def dynamic_programming(weight_limit, item_count, items):
     knapsack = [[0 for _ in range(weight_limit + 1)] for _ in range(item_count + 1)]
 
@@ -99,10 +123,76 @@ def dynamic_programming(weight_limit, item_count, items):
     return knapsack[item_count][weight_limit]
 
 
+# Item = st.dictionaries({'Weight': st.integers(min_value=1), 'Value': st.integers(min_value=1)})
+# ItemList = st.lists(Item)
+# Capacity = st.integers(min_value=1)
+
+
 # class TestSolution(unittest.TestCase):
+#     @given(Item, Capacity)
+#     def test_returns_a_fitting_result(self, weight_limit, item_count, items):
+#         result = dynamic_programming(weight_limit, item_count, items)
+#         self.assertLessEqual(
+#             sum(size for value, size in result),
+#             weight_limit
+#         )
+
+# @given(ItemSet, Capacity)
+# def test_returns_a_non_empty_result_if_any_fit(self, items, capacity):
+#     assume(any(item[1] <= capacity for item in items))
+#     result = solve_knapsack(items, capacity)
+#     self.assertGreater(len(result), 0)
 #
-#     def test_one(self):
-#         self.assertEqual(solution("A", "K"), 1)
+# @given(ItemSet, Capacity)
+# def test_is_independent_of_order(self, items, capacity):
+#     result = solve_knapsack(items, capacity)
+#     items.reverse()
+#     result2 = solve_knapsack(items, capacity)
+#     self.assertEqual(score_solution(result), score_solution(result2))
+#
+# @given(ItemSet, Capacity, Capacity)
+# def test_raising_capacity_cannot_worsen_solution(self, items, c1, c2):
+#     assume(c1 != c2)
+#     c1, c2 = sorted((c1, c2))
+#     result1 = solve_knapsack(items, c1)
+#     result2 = solve_knapsack(items, c2)
+#     self.assertLessEqual(score_solution(result1), score_solution(result2))
+#
+# @given(ItemSet, Capacity)
+# def test_increasing_score_of_chosen_item_improves_things(self, items, capacity):
+#     assume(any(item[1] <= capacity for item in items))
+#     result = solve_knapsack(items, capacity)
+#     assert result
+#     for item in result:
+#         new_items = list(items)
+#         new_items.append((item[0] + 1, item[1]))
+#         new_result = solve_knapsack(new_items, capacity)
+#         self.assertGreater(
+#             score_solution(new_result),
+#             score_solution(result))
+#
+# @given(ItemSet, Capacity)
+# def test_increasing_weight_of_chosen_item_does_not_improve_things(self, items, capacity):
+#     assume(any(item[1] <= capacity for item in items))
+#     result = solve_knapsack(items, capacity)
+#     assert result
+#     for item in result:
+#         new_items = list(items)
+#         new_items.remove(item)
+#         new_items.append((item[0], item[1] + 1))
+#         new_result = solve_knapsack(new_items, capacity)
+#         self.assertLessEqual(
+#             score_solution(new_result), score_solution(result))
+#
+# @given(ItemSet, Capacity)
+# def test_removing_a_chosen_item_does_not_improve_matters(self, items, capacity):
+#     result = solve_knapsack(items, capacity)
+#     score = score_solution(result)
+#     for item in result:
+#         new_items = list(items)
+#         new_items.remove(item)
+#         new_result = solve_knapsack(new_items, capacity)
+#         self.assertLessEqual(score_solution(new_result), score)
 
 
 if __name__ == '__main__':
@@ -111,27 +201,15 @@ if __name__ == '__main__':
     WEIGHT_CAPACITY, UNIQUE_COUNT = data.pop([0][0])[0], data.pop([0][0])[0]
     run_time, exhaustive_result, heuristic_result, naive_result, dynamic_result = 0, 0, 0, 0, 0
 
-
     dict_list = []
     for d in range(UNIQUE_COUNT):
         current_dict = {'Weight': data[d][0], 'Value': data[d][1], 'Index': d + 1, 'Ratio': data[d][1] / data[d][0]}
         dict_list.append(current_dict)
 
-    approach_map = {
-        'exhaustive': exhaustive_approach(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list),
-        'heuristic': heuristic_approach(WEIGHT_CAPACITY, dict_list),
-        'naive': naive_recursion(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list),
-        'dynamic': dynamic_programming(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
-    }
-
-    for approach in approach_map:
-        run_time = 0
-        for run in range(RUN_COUNT):
-            start = time.perf_counter()
-            approach_result = approach_map[approach]
-            end = time.perf_counter()
-            run_time += ((end - start) / RUN_COUNT)
-        print(f"The {approach} result is {approach_result} with a runtime of {run_time:.9f} seconds")
+    exhaustive_approach(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
+    heuristic_approach(WEIGHT_CAPACITY, dict_list)
+    naive_recursion(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
+    dynamic_programming(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
 
     # if UNIQUE_COUNT <= 22:
     #     for run in range(RUN_COUNT):
