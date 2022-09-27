@@ -1,6 +1,7 @@
 """
 Luke Cunningham
-Knapsack
+Generating solutions for the NP-complete with exhaustive, heuristic, naive recursion, and dynamic programming
+approaches.
 """
 import random
 import time
@@ -8,32 +9,37 @@ import time
 
 def read_file(file_path):
     """
-
-    :param file_path:
-    :return:
+    Parse a txt file for the knapsack problem parameters and items.
+    :param file_path: File to parse.
+    :return: knapsack capacity, number of items to choose from, list of tuples (weight, value) for items
     """
     with open(file_path) as f:
         items = [tuple(map(int, line.split(' '))) for line in f]
-    cap, cnt = items.pop([0][0])[0], items.pop([0][0])[0]
-    return cap, cnt, items
+    weight_limit, item_count = items.pop([0][0])[0], items.pop([0][0])[0]
+    return weight_limit, item_count, items
 
 
-def generate_inputs(cap, cnt):
+def generate_inputs(weight_limit, item_count):
     """
-
-    :param cap:
-    :param cnt:
-    :return:
+    Randomly generate items' weights and values
+    :param weight_limit: knapsack capacity
+    :param item_count: number of items to choose from
+    :return: knapsack capacity, number of items to choose from, list of tuples (weight, value) for items
     """
     items = []
-    for _ in range(cnt):
+    for _ in range(item_count):
         w = random.randint(1, 20)
         v = random.randint(1, 30)
         items.append((w, v))
-    return cap, cnt, items
+    return weight_limit, item_count, items
 
 
 def timer_func(func):
+    """
+    Wrapper function for timing method calls.
+    :param func: function to time.
+    :return: the result of the function.
+    """
     def wrap_func(*args, **kwargs):
         elapsed, result = 0, 0
         runs = 3
@@ -47,23 +53,22 @@ def timer_func(func):
                 break
         print(f'Function {func.__name__!r} executed in {elapsed:.9f}s yielding a value of {result}')
         return result
-
     return wrap_func
 
 
 @timer_func
 def exhaustive_approach(weight_limit, item_count, items):
     """
-
-    :param weight_limit:
-    :param item_count:
-    :param items:
-    :return:
+    Generates the power set of item weights to calculate the subset with the highest cumulative value.
+    :param weight_limit: knapsack capacity
+    :param item_count: number of items to choose from
+    :param items: list of tuples (weight, value)
+    :return: the highest combination of item values possible
     """
     power_set, power_set_values, power_set_indexes, knapsack_indexes = [], [], [], []
     highest_value = 0
 
-    # Calculate powerset of item weights
+    # Generate power set of item weights
     for i in range(2 ** item_count):
         subset, subset_indexes = [], []
         subset_value = 0
@@ -90,10 +95,10 @@ def exhaustive_approach(weight_limit, item_count, items):
 @timer_func
 def heuristic_approach(weight_limit, items):
     """
-
-    :param weight_limit:
-    :param items:
-    :return:
+    heuristic approach prioritizes items with higher value per weight
+    :param weight_limit: knapsack capacity
+    :param items: list of tuples (weight, value)
+    :return: combination of items (may not be optimal)
     """
     knapsack_indexes = []
     knapsack_value = 0
@@ -113,13 +118,12 @@ def heuristic_approach(weight_limit, items):
 
 def naive_recursion(weight_limit, item_count, items):
     """
-
-    :param weight_limit:
-    :param item_count:
-    :param items:
-    :return:
+    naive recursion approach
+    :param weight_limit: knapsack capacity
+    :param item_count: number of items to choose from
+    :param items: list of tuples (weight, value)
+    :return: the highest combination of item values possible
     """
-    # Base Case
     if weight_limit == 0 or item_count == 0:
         return 0
 
@@ -137,11 +141,11 @@ def naive_recursion(weight_limit, item_count, items):
 @timer_func
 def naive_recursion_timed(weight_limit, item_count, items):
     """
-
-    :param weight_limit:
-    :param item_count:
-    :param items:
-    :return:
+    Naive recursive approach method call function. Provides wrapper functionality without unintended repeats.
+    :param weight_limit: knapsack capacity
+    :param item_count: number of items to choose from
+    :param items: list of tuples (weight, value)
+    :return: result of the naive_recursion method call
     """
     return naive_recursion(weight_limit, item_count, items)
 
@@ -149,11 +153,11 @@ def naive_recursion_timed(weight_limit, item_count, items):
 @timer_func
 def dynamic_programming(weight_limit, item_count, items):
     """
-
-    :param weight_limit:
-    :param item_count:
-    :param items:
-    :return:
+    "bottom up" dynamic programming approach
+    :param weight_limit: knapsack capacity
+    :param item_count: number of items to choose from
+    :param items: list of tuples (weight, value)
+    :return: the highest combination of item values possible
     """
     knapsack = [[0 for _ in range(weight_limit + 1)] for _ in range(item_count + 1)]
 
@@ -171,15 +175,15 @@ def dynamic_programming(weight_limit, item_count, items):
 
 
 if __name__ == '__main__':
-    WEIGHT_CAPACITY, UNIQUE_COUNT, data = read_file("venv/Resources/Exhaustive_Verification")
-    # WEIGHT_CAPACITY, UNIQUE_COUNT, data = generate_inputs(80, 15)
+    WEIGHT_CAPACITY, COUNT, data = read_file("venv/Resources/Exhaustive_Verification")
+    # WEIGHT_CAPACITY, COUNT, data = generate_inputs(80, 15)
     dict_list = []
-    for d in range(UNIQUE_COUNT):
+    for d in range(COUNT):
         current_dict = {'Weight': data[d][0], 'Value': data[d][1], 'Index': d + 1, 'Ratio': data[d][1] / data[d][0]}
         dict_list.append(current_dict)
 
     heuristic_approach(WEIGHT_CAPACITY, dict_list)
-    dynamic_programming(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
-    naive_recursion_timed(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
-    if UNIQUE_COUNT <= 22:
-        exhaustive_approach(WEIGHT_CAPACITY, UNIQUE_COUNT, dict_list)
+    dynamic_programming(WEIGHT_CAPACITY, COUNT, dict_list)
+    naive_recursion_timed(WEIGHT_CAPACITY, COUNT, dict_list)
+    if COUNT <= 22:
+        exhaustive_approach(WEIGHT_CAPACITY, COUNT, dict_list)
