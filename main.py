@@ -3,6 +3,7 @@ Luke Cunningham
 Generating solutions for the NP-complete with exhaustive, heuristic, naive recursion, and dynamic programming
 approaches.
 """
+import math
 import random
 import time
 
@@ -28,8 +29,8 @@ def generate_inputs(weight_limit, item_count):
     """
     items = []
     for _ in range(item_count):
-        w = random.randint(1, 20)
-        v = random.randint(1, 30)
+        w = random.randint(1, math.ceil(weight_limit / 5))
+        v = random.randint(1, math.ceil(weight_limit / 3))
         items.append((w, v))
     return weight_limit, item_count, items
 
@@ -51,7 +52,7 @@ def timer_func(func):
                 elapsed += elapsed / runs
             else:
                 break
-        print(f'Function {func.__name__!r} executed in {elapsed:.9f}s yielding a value of {result}')
+        print(f'Function {func.__name__!r} executed in {elapsed:.9f} seconds yielding a value of {result}')
         return result
     return wrap_func
 
@@ -175,8 +176,8 @@ def dynamic_programming(weight_limit, item_count, items):
 
 
 if __name__ == '__main__':
-    WEIGHT_CAPACITY, COUNT, data = read_file("venv/Resources/Exhaustive_Verification")
-    # WEIGHT_CAPACITY, COUNT, data = generate_inputs(80, 15)
+    # WEIGHT_CAPACITY, COUNT, data = read_file("venv/Resources/Exhaustive_Verification")
+    WEIGHT_CAPACITY, COUNT, data = generate_inputs(500000, 21000)
     dict_list = []
     for d in range(COUNT):
         current_dict = {'Weight': data[d][0], 'Value': data[d][1], 'Index': d + 1, 'Ratio': data[d][1] / data[d][0]}
@@ -184,6 +185,7 @@ if __name__ == '__main__':
 
     heuristic_approach(WEIGHT_CAPACITY, dict_list)
     dynamic_programming(WEIGHT_CAPACITY, COUNT, dict_list)
-    naive_recursion_timed(WEIGHT_CAPACITY, COUNT, dict_list)
+    if COUNT <= 27:
+        naive_recursion_timed(WEIGHT_CAPACITY, COUNT, dict_list)
     if COUNT <= 22:
         exhaustive_approach(WEIGHT_CAPACITY, COUNT, dict_list)
